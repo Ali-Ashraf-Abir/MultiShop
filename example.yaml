@@ -1,0 +1,109 @@
+# =========================
+#  ALL FEATURES DEMO SHOP
+# =========================
+# This file shows every available field with explanations.
+# Notes:
+# - The plugin **shows all items** every cycle, but each item rolls against `chance`.
+#   If it "wins", it's available with the stock you define (min/max or unlimited).
+#   If it "loses", it stays visible but shows "Not available this cycle" and can't be bought.
+# - `unlimited-stock: true` ignores min/max stock and only `max-per-player` limits a player.
+# - For VANILLA items:
+#     type: VANILLA
+#     material: <Bukkit Material name>   (icon comes from that material)
+#   Optional: display-name, lore (if omitted, Minecraft default name is used)
+# - For CUSTOM items:
+#     type: CUSTOM
+#     icon: <Bukkit Material to display as the icon in the GUI>
+#     give-command: "<command with %player% placeholder>" (required to deliver the item)
+#     execute-as: CONSOLE | PLAYER  (default CONSOLE)
+# - Color codes in text support &-codes (e.g., "&b", "&6").
+# - `visible-slots` controls how many trades appear (we show all items, so set this ≥ item count to avoid paging).
+
+id: all_features
+display-name: "&d&lEverything Shop"
+command: "allshop"        # /shop allshop
+visible-slots: 9          # GUI trade rows; set at least to number of items for cleaner layout
+
+# Optional/legacy field (not used by current logic). You can omit it.
+# max-pool-size: 50
+
+items:
+  # -------- VANILLA with full customization --------
+  - id: iron_sword
+    type: VANILLA
+    material: IRON_SWORD     # the actual in-game item given (and the icon shown)
+    display-name: "&fIron Sword"
+    lore:
+      - "&7Solid starter blade."
+      - "&8Durable, affordable."
+    price: 200               # cost in your Vault currency
+    chance: 100              # 100 => always available this cycle
+    max-per-player: 2        # a single player can buy up to 2 each cycle
+    min-stock: 2             # global stock lower bound (for this cycle)
+    max-stock: 4             # global stock upper bound (for this cycle)
+
+  # -------- VANILLA using defaults (no display name/lore) --------
+  - id: diamond_sword_default
+    type: VANILLA
+    material: DIAMOND_SWORD  # no display fields -> uses default Minecraft name
+    price: 1200
+    chance: 12               # ~12% chance each cycle
+    max-per-player: 1
+    min-stock: 1
+    max-stock: 1
+
+  # -------- VANILLA unlimited stock (per-player cap still applies) --------
+  - id: arrows_unlimited
+    type: VANILLA
+    material: ARROW
+    display-name: "&7Arrows x16"
+    lore: [ "&7Unlimited global stock per cycle." ]
+    price: 80
+    chance: 80
+    max-per-player: 10
+    unlimited-stock: true    # ignores min/max stock; treated as infinite for the cycle
+
+  # -------- CUSTOM delivered via command (run as CONSOLE) --------
+  - id: flame_blade
+    type: CUSTOM
+    icon: BLAZE_POWDER       # icon shown in GUI (CUSTOM items must pick an icon)
+    display-name: "&6Flame Blade"
+    lore:
+      - "&eCustom weapon from OtherPlugin."
+      - "&7Delivered via command."
+    price: 1800
+    chance: 6
+    max-per-player: 1
+    min-stock: 1
+    max-stock: 2
+    give-command: "giveblade %player% flame_blade 1"  # %player% is replaced
+    execute-as: CONSOLE
+
+  # -------- CUSTOM run as PLAYER (requires player permission for that command) --------
+  - id: hunter_knife
+    type: CUSTOM
+    icon: SHEARS
+    display-name: "&aHunter Knife"
+    lore: [ "&7Lightweight custom knife." ]
+    price: 700
+    chance: 25
+    max-per-player: 2
+    min-stock: 1
+    max-stock: 3
+    give-command: "give %player% hunter_knife 1"
+    execute-as: PLAYER
+
+  # -------- CUSTOM unlimited stock + player execution --------
+  - id: repair_token
+    type: CUSTOM
+    icon: ANVIL
+    display-name: "&aRepair Token"
+    lore:
+      - "&7Redeem with /repair."
+      - "&7Only per-player cap limits purchases."
+    price: 450
+    chance: 40
+    max-per-player: 2
+    unlimited-stock: true
+    give-command: "give %player% repair 1"
+    execute-as: PLAYER
