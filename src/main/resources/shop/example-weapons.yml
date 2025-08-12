@@ -1,0 +1,44 @@
+id: weapons
+display-name: "&cWeapon Shop"
+command: "weapons"     # /shop weapons
+max-pool-size: 12      # total items defined in this file (for validation; optional)
+visible-slots: 4       # how many items appear each shuffle
+items:
+  - id: iron_sword
+    type: VANILLA
+    material: IRON_SWORD
+    display-name: "&fIron Sword"
+    lore:
+      - "&7Solid choice."
+    price: 200
+    chance: 40          # percent
+    max-per-player: 1
+  - id: diamond_sword
+    type: VANILLA
+    material: DIAMOND_SWORD
+    display-name: "&bDiamond Sword"
+    price: 1200
+    chance: 10
+    max-per-player: 1
+  - id: flame_blade
+    type: CUSTOM
+    icon: BLAZE_POWDER   # icon to show for custom item
+    display-name: "&6Flame Blade"
+    lore:
+      - "&eCustom item from OtherPlugin."
+    price: 1800
+    chance: 6
+    max-per-player: 1
+    give-command: "otherplugin:giveblade %player% flame_blade 1"
+  - id: bow
+    type: VANILLA
+    material: BOW
+    price: 400
+    chance: 30
+    max-per-player: 2
+  - id: crossbow
+    type: VANILLA
+    material: CROSSBOW
+    price: 600
+    chance: 14
+    max-per-player: 1

@@ -1,0 +1,21 @@
+interval-minutes: 5
+
+database:
+  type: mysql   # mysql | sqlite
+  sqlite:
+    file: plugins/MultiShop/multishop.db
+  mysql:
+    host: localhost
+    port: 3306
+    database: multishop
+    user: root
+    password: Abir01731292533.
+    useSSL: false
+performance:
+  storage:
+    realtime: false        # false = only write on reshuffle (fastest). true = update after purchases.
+    debounced-ms: 300      # if realtime=true, batch writes every 300ms
+  gui:
+    refresh-mode: debounced   # debounced | reopen
+    refresh-debounce-ms: 150  # only used if debounced
+  priming-period-ticks: 5     # was 2; lower scheduler churn

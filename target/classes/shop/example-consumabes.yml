@@ -1,0 +1,28 @@
+id: consumables
+display-name: "&aConsumables"
+command: "consumes"
+visible-slots: 5
+items:
+  - id: gapple
+    type: VANILLA
+    material: GOLDEN_APPLE
+    display-name: "&6Golden Apple"
+    price: 350
+    chance: 16
+    max-per-player: 3
+  - id: heal_potion
+    type: CUSTOM
+    icon: POTION
+    display-name: "&dHealing Tonic"
+    lore:
+      - "&7From AlchemyPlus"
+    price: 420
+    chance: 20
+    max-per-player: 5
+    give-command: "alchemyplus:give %player% heal_tonic 1"
+  - id: steak
+    type: VANILLA
+    material: COOKED_BEEF
+    price: 50
+    chance: 75
+    max-per-player: 16

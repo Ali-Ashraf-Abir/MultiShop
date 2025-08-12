@@ -1,0 +1,24 @@
+name: MultiShop
+main: com.multishop.MultiShopPlugin
+version: 1.0.0
+api-version: '1.20'
+authors: [ "you" ]
+depend: [ Vault ]
+commands:
+  shop:
+    description: Open a shop
+    usage: /shop <shop-id>
+    permission: multishop.use
+  shopadmin:
+    description: Admin controls for MultiShop
+    permission: multishop.admin
+  shoptimer:
+    description: Toggle your shop reset bossbar
+    usage: /shoptimer [on|off|toggle]
+    permission: multishop.use
+
+permissions:
+  multishop.use:
+    default: true
+  multishop.admin:
+    default: op
