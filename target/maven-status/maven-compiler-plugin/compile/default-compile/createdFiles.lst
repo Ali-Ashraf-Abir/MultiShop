@@ -2,6 +2,7 @@ com\multishop\commands\ShopAdminCommand.class
 com\multishop\model\ShopItemLive.class
 com\multishop\service\TimerBarService.class
 com\multishop\service\QuantityPromptService$Pending.class
+com\multishop\gui\TokenGuardListener.class
 com\multishop\model\ActiveShopState.class
 com\multishop\service\BanService.class
 com\multishop\service\GuiRefreshService.class

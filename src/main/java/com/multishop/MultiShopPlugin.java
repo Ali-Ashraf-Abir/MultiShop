@@ -68,12 +68,13 @@ public class MultiShopPlugin extends JavaPlugin {
         getCommand("shopadmin").setExecutor(new ShopAdminCommand(this));
         getCommand("shoptimer").setExecutor(new ShopTimerCommand(this));
         quantityPrompt = new com.multishop.service.QuantityPromptService(this);
+
         getCommand("shop").setTabCompleter(new com.multishop.commands.ShopTabCompleter(this));
         getCommand("shopadmin").setTabCompleter(new com.multishop.commands.ShopAdminTabCompleter(this));
         getCommand("shoptimer").setTabCompleter(new com.multishop.commands.ShopTimerTabCompleter());
         // Register GUI listeners
         new com.multishop.gui.GuiListener(this);
-
+        new com.multishop.gui.TokenGuardListener(this);
         getLogger().info("MultiShop enabled.");
     }
 

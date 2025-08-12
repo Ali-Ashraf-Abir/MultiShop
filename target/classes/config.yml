@@ -9,7 +9,7 @@ database:
     port: 3306
     database: multishop
     user: root
-    password: Abir01731292533.
+    password: 123.
     useSSL: false
 performance:
   storage:

@@ -7,6 +7,7 @@ import com.multishop.model.ActiveShopState;
 import com.multishop.model.ShopItemLive;
 import com.multishop.util.ItemUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -39,7 +40,7 @@ public class ShopManager {
     public ActiveShopState liveState(String shopId){ return live.get(shopId.toLowerCase()); }
     public ShopDefinition getDef(String id){ return defs.get(id.toLowerCase()); }
 
-    /** Load persisted bans into live state. Call from onEnable() after creating this manager. */
+    /** Persisted bans -> live state (call from onEnable). */
     public void syncBansFromStore(){
         for (var d : defs.values()){
             var s = live.get(d.id.toLowerCase());
@@ -52,8 +53,7 @@ public class ShopManager {
     public void initializeSchedule(){
         Instant now = Instant.now();
         ZonedDateTime z = ZonedDateTime.ofInstant(now, ZoneId.systemDefault());
-        int minute = z.getMinute();
-        int mod = minute % intervalMinutes;
+        int mod = z.getMinute() % intervalMinutes;
         int add = (mod == 0 && z.getSecond()==0) ? 0 : (intervalMinutes - mod);
         ZonedDateTime next = z.withSecond(0).withNano(0).plusMinutes(add);
 
@@ -76,13 +76,18 @@ public class ShopManager {
 
         for (var def : defs.values()){
             var state = live.get(def.id.toLowerCase());
-            if (state == null || state.paused) continue;
+            if (state == null) continue;
+
+            if (state.paused){
+                // still write an empty snapshot to reflect paused state if you want; skipping for clarity
+                continue;
+            }
 
             List<ShopItemLive> all = new ArrayList<>();
             state.indexById.clear();
 
             for (ShopItemDef sd : def.items){
-                // icon
+                // choose an icon
                 Material m;
                 if ("VANILLA".equalsIgnoreCase(sd.type)) {
                     m = Material.matchMaterial(sd.material == null ? "STONE" : sd.material);
@@ -94,11 +99,11 @@ public class ShopManager {
 
                 ShopItemLive li = new ShopItemLive(sd, icon);
 
-                // chance roll
+                // availability roll
                 int roll = rng.nextInt(1, 101);
                 li.available = roll <= Math.max(0, Math.min(100, sd.chance));
 
-                // stock
+                // decide stock
                 if (li.available) {
                     if (sd.unlimitedStock) {
                         li.stockRemaining = Integer.MAX_VALUE;
@@ -115,15 +120,29 @@ public class ShopManager {
                 all.add(li);
             }
 
-            state.visible = all;                // show all items, GUI marks availability
+            state.visible = all;                // show all items; GUI marks availability
             state.perPlayerBought.clear();
             state.shuffledAt = at;
 
-            // write snapshot immediately via async writer
+            // write snapshot (async batching handled by DbQueueService)
             try {
                 plugin.dbQueue().writeNow(def.id, all, at, endsAt);
             } catch (Exception ex) {
                 plugin.getLogger().warning("[MultiShop] Snapshot write failed for "+def.id+": " + ex.getMessage());
+            }
+
+            // refresh any open windows immediately
+            com.multishop.gui.GuiListener.refreshOpenForShop(def.id);
+
+            // optional: notify players who have this shop open (less spammy than global)
+            for (Player p : Bukkit.getOnlinePlayers()){
+                var view = p.getOpenInventory();
+                if (view != null && view.getTopInventory() instanceof org.bukkit.inventory.MerchantInventory){
+                    // lightweight heuristic: if they had this shop open, refreshOpenForShop already reopened it
+                    // we still send a small confirmation
+                    p.sendMessage(ChatColor.GOLD + "» " + ChatColor.YELLOW + "Shop " +
+                            ChatColor.translateAlternateColorCodes('&', def.displayName) + ChatColor.YELLOW + " refreshed.");
+                }
             }
         }
 
@@ -131,11 +150,11 @@ public class ShopManager {
         plugin.actionBar().setNextReset(endsAt);
 
         for (Player p : Bukkit.getOnlinePlayers()){
-            plugin.timerBar().show(p.getUniqueId()); // only if opted-in
+            plugin.timerBar().show(p.getUniqueId()); // only shows if opted-in
         }
     }
 
-    // Persistent ban helpers (delegate to BanService)
+    // Persistent ban helpers
     public boolean isBanned(String shopId, UUID uuid){ return plugin.banService().isBanned(shopId, uuid); }
     public void ban(String shopId, UUID uuid){
         plugin.banService().ban(shopId, uuid);
@@ -186,7 +205,7 @@ public class ShopManager {
             li.stockRemaining = Math.max(0, li.stockRemaining - 1);
         }
 
-        // enqueue a debounced snapshot if realtime=true
+        // enqueue debounced snapshot if realtime enabled
         if (plugin.storage().isReady()){
             try {
                 plugin.dbQueue().maybeQueue(shopId, s.visible, s.shuffledAt, plugin.timerBar().getNextReset());

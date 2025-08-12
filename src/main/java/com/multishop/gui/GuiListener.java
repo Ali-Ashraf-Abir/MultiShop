@@ -43,17 +43,20 @@ public class GuiListener implements Listener {
 
             int idx = mi.getSelectedRecipeIndex();
             WindowCtx ctx = open.get(playerId);
-            if (ctx == null || idx < 0 || idx >= ctx.items.size()) return;
+            if (ctx == null) return;
 
-            ItemStack want = priceToken(ctx.items.get(idx).def.price);
+            // waiting placeholder? keep token 0 so the result shows a barrier icon
+            int price = (ctx.items == null || ctx.items.isEmpty() || idx < 0 || idx >= ctx.items.size())
+                    ? 0 : ctx.items.get(idx).def.price;
+
+            ItemStack want = priceToken(price);
             ItemStack cur0 = mi.getItem(0);
-            if (!isOurToken(cur0, ctx.items.get(idx).def.price)) {
+            if (!isOurToken(cur0, price)) {
                 mi.setItem(0, want);
             }
             if (mi.getItem(1) != null) {
                 mi.setItem(1, null);
             }
-
             cleanPriceTokensFromPlayer(p);
         }, 1L, period);
         primingTasks.put(playerId, taskId);
@@ -84,13 +87,24 @@ public class GuiListener implements Listener {
         if (!(e.getInventory() instanceof MerchantInventory mi)) return;
         if (!open.containsKey(p.getUniqueId())) return;
 
-        // RESULT FIRST (so shift-click works)
+        // RESULT FIRST (so shift-click works even if MOVE_TO_OTHER_INVENTORY)
         if (e.getSlotType() == InventoryType.SlotType.RESULT){
             e.setCancelled(true);
 
             WindowCtx ctx = open.get(p.getUniqueId());
             int idx = mi.getSelectedRecipeIndex();
-            if (ctx == null || idx < 0 || idx >= ctx.items.size()) return;
+
+            // Waiting placeholder: inform and ignore
+            if (ctx == null || ctx.items == null || ctx.items.isEmpty()){
+                long secs = Math.max(0L, com.multishop.MultiShopPlugin.inst().timerBar().getNextReset().getEpochSecond() - java.time.Instant.now().getEpochSecond());
+                String mmss = String.format("%d:%02d", secs/60, secs%60);
+                p.sendMessage(ChatColor.YELLOW + "This shop will open in " + ChatColor.WHITE + mmss + ChatColor.YELLOW + ". Please check back soon.");
+                mi.setItem(0, null); mi.setItem(1, null);
+                cleanPriceTokensFromPlayer(p);
+                return;
+            }
+
+            if (idx < 0 || idx >= ctx.items.size()) return;
             var li = ctx.items.get(idx);
 
             if (e.getClick().isRightClick()){
@@ -131,8 +145,8 @@ public class GuiListener implements Listener {
                 WindowCtx ctx = open.get(p.getUniqueId());
                 if (ctx == null) return;
                 int idx = mi.getSelectedRecipeIndex();
-                if (idx < 0 || idx >= ctx.items.size()) return;
-                mi.setItem(0, priceToken(ctx.items.get(idx).def.price));
+                int price = (ctx.items == null || ctx.items.isEmpty() || idx < 0 || idx >= (ctx.items.size())) ? 0 : ctx.items.get(idx).def.price;
+                mi.setItem(0, priceToken(price));
                 mi.setItem(1, null);
                 cleanPriceTokensFromPlayer(p);
             });
@@ -148,8 +162,8 @@ public class GuiListener implements Listener {
             if (ctx == null) return;
 
             int idx = cur.getSelectedRecipeIndex();
-            if (idx < 0 || idx >= ctx.items.size()) return;
-            cur.setItem(0, priceToken(ctx.items.get(idx).def.price));
+            int price = (ctx.items == null || ctx.items.isEmpty() || idx < 0 || idx >= (ctx.items.size())) ? 0 : ctx.items.get(idx).def.price;
+            cur.setItem(0, priceToken(price));
             cur.setItem(1, null);
             cleanPriceTokensFromPlayer(p);
         });
@@ -195,6 +209,29 @@ public class GuiListener implements Listener {
                 && cursor.hasItemMeta() && cursor.getItemMeta().hasDisplayName()
                 && cursor.getItemMeta().getDisplayName().startsWith(ChatColor.YELLOW + "$")){
             p.setItemOnCursor(null);
+        }
+    }
+
+    /** Refresh the GUI for anyone currently viewing this shop (called after reshuffle). */
+    public static void refreshOpenForShop(String shopId){
+        String key = shopId.toLowerCase();
+        for (var entry : open.entrySet()){
+            UUID id = entry.getKey();
+            WindowCtx ctx = entry.getValue();
+            if (!ctx.shopId.equalsIgnoreCase(key)) continue;
+
+            var p = Bukkit.getPlayer(id);
+            if (p == null || !p.isOnline()) continue;
+
+            var view = p.getOpenInventory();
+            if (view == null || !(view.getTopInventory() instanceof MerchantInventory)) continue;
+
+            var plugin = MultiShopPlugin.inst();
+            var def = plugin.shopManager().getDef(shopId);
+            var state = plugin.shopManager().liveState(shopId);
+            if (def != null && state != null){
+                new com.multishop.gui.ShopGUI(plugin).open(p, def, state.visible);
+            }
         }
     }
 
