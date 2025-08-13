@@ -169,11 +169,11 @@ items:
 | Command | Description | Permission Required |
 |---------|-------------|-------------------|
 | `/shop <shopId>` | Open a specific shop interface | `multishop.use` |
-| `/multishop reshuffle` | Force immediate reshuffle of all shops | `multishop.admin` |
-| `/multishop ban <shop> <player>` | Ban player from specific shop | `multishop.admin` |
-| `/multishop unban <shop> <player>` | Remove shop ban from player | `multishop.admin` |
-| `/multishop togglebar` | Toggle reshuffle timer visibility | `multishop.togglebar` |
-| `/multishop help` | Display command help menu | `multishop.use` |
+| `/shopadmin reshuffle` | Force immediate reshuffle of all shops | `multishop.admin` |
+| `/shopadmin ban <shop> <player>` | Ban player from specific shop | `multishop.admin` |
+| `/shopadmin unban <shop> <player>` | Remove shop ban from player | `multishop.admin` |
+| `/shopadmin togglebar` | Toggle reshuffle timer visibility | `multishop.togglebar` |
+| `/shopadmin help` | Display command help menu | `multishop.use` |
 
 ### Usage Examples
 ```bash
